@@ -5,31 +5,60 @@
  * this file and include it in basic-server.js so that it actually works.
  * *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html. */
 
-var handleRequest = function(request, response) {
+var url = require('url');
+var qs = require('querystring');
+var saveMsgObj = {};
+saveMsgObj.results = [];
+
+
+
+exports.handler = function(request, response) {
   /* the 'request' argument comes from nodes http module. It includes info about the
   request - such as what URL the browser is requesting. */
 
   /* Documentation for both request and response can be found at
    * http://nodemanual.org/0.8.14/nodejs_ref_guide/http.html */
-
   console.log("Serving request type " + request.method + " for url " + request.url);
-
   var statusCode = 200;
+  var path = url.parse(request.url).pathname;
+  console.log(path);
 
   /* Without this line, this server wouldn't work. See the note
    * below about CORS. */
   var headers = defaultCorsHeaders;
+  var tempMsg;
 
-  headers['Content-Type'] = "text/plain";
+  headers["Content-Type"] = "text/plain";
+  response.writeHead(statusCode, headers);
+  if(request.method === 'POST'){
+    statusCode = 201;
+    console.log("Responding to a post request");
+    request.on('data', function(data){
+      tempMsg = JSON.parse(data);
+      tempMsg.createdAt = new Date();
+    });
+    request.on('end', function() {
+      saveMsgObj.results.unshift(tempMsg);
+    });
+  }
+
+  if(request.method === 'GET'){
+    console.log('Responding to a GET request...');
+    console.log('path:', path);
+    response.write(JSON.stringify(saveMsgObj));
+    statusCode = 404;
+  }
+
+
 
   /* .writeHead() tells our server what HTTP status code to send back */
-  response.writeHead(statusCode, headers);
+
 
   /* Make sure to always call response.end() - Node will not send
    * anything back to the client until you do. The string you pass to
    * response.end() will be the body of the response - i.e. what shows
    * up in the browser.*/
-  response.end("Hello, World!");
+  response.end();
 };
 
 /* These headers will allow Cross-Origin Resource Sharing (CORS).

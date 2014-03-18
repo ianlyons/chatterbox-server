@@ -6,6 +6,7 @@ module.exports = {
     this._responseCode = null;
     this._headers = null;
     this._data = null;
+    this.write = function () { return null; }
     var self = this;
     this.writeHead = function(responseCode, headers) {
       console.log('WriteHead called with ' + responseCode);
